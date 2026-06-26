@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "academic-paper-pipeline"
+version = "0.1.0"
+description = "Agentic research-data infrastructure pipeline for collecting, structuring, extracting, modeling, and monitoring academic paper data."
+readme = "README.md"
+requires-python = ">=3.10,<3.14"
+authors = [
+  { name = "Qianqian He" }
+]
+dependencies = [
+  "httpx>=0.27.0",
+  "pandas>=2.2.0",
+  "pydantic>=2.7.0",
+  "pydantic-settings>=2.3.0",
+  "python-dotenv>=1.0.1",
+  "typer>=0.12.0",
+  "rich>=13.7.0",
+  "sqlalchemy>=2.0.0",
+  "scikit-learn>=1.4.0",
+  "numpy>=1.26.0",
+  "prometheus-client>=0.20.0",
+  "langchain>=0.2.0",
+  "langgraph>=0.2.0",
+  "langsmith>=0.1.0",
+  "langchain-openai>=0.1.0",
+  "arxiv>=2.1.0",
+  "tabulate>=0.9.0"
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0.0",
+  "ruff>=0.5.0",
+  "black>=24.0.0",
+  "mypy>=1.10.0",
+  "pre-commit>=3.7.0"
+]
+
+[project.scripts]
+paper-pipeline = "academic_paper_pipeline.pipelines.run_all:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+strict = false
