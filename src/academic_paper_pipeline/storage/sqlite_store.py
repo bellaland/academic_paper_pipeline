@@ -221,3 +221,72 @@ class SQLiteStore:
             )
         df.to_csv(output_path, index=False)
         return output_path
+
+    def get_papers_for_extraction(self, limit: int = 10) -> list[dict[str, Any]]:
+        with self.connect() as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute(
+                """
+                SELECT paper_id, title, abstract, publication_year, source_api
+                FROM papers
+                WHERE abstract IS NOT NULL
+                    AND abstract != ''
+                    AND paper_id NOT IN (
+                        SELECT paper_id FROM paper_extractions
+                    )
+                ORDER BY publication_year DESC
+                LIMIT ?
+                """,
+                (limit,),
+            ).fetchall()
+            return [dict(row) for row in rows]
+
+    def upsert_paper_extraction(self, extraction: dict[str, Any]) -> None:
+        with self.connect() as conn:
+            conn.execute(
+                """
+                INSERT INTO paper_extractions(
+                    extraction_id,
+                    paper_id,
+                    research_question,
+                    method,
+                    dataset,
+                    key_finding,
+                    field,
+                    relevance_label,
+                    confidence,
+                    model_name,
+                    prompt_version,
+                    raw_output_json,
+                    created_at
+                )
+                VALUES (
+                    :extraction_id,
+                    :paper_id,
+                    :research_question,
+                    :method,
+                    :dataset,
+                    :key_finding,
+                    :field,
+                    :relevance_label,
+                    :confidence,
+                    :model_name,
+                    :prompt_version,
+                    :raw_output_json,
+                    :created_at
+                )
+                ON CONFLICT(extraction_id) DO UPDATE SET
+                    research_question = excluded.research_question,
+                    method = excluded.method,
+                    dataset = excluded.dataset,
+                    key_finding = excluded.key_finding,
+                    field = excluded.field,
+                    relevance_label = excluded.relevance_label,
+                    confidence = excluded.confidence,
+                    model_name = excluded.model_name,
+                    prompt_version = excluded.prompt_version,
+                    raw_output_json = excluded.raw_output_json,
+                    created_at = excluded.created_at
+                """,
+                extraction,
+            )

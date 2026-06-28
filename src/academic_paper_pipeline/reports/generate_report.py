@@ -81,6 +81,58 @@ def generate_pipeline_report(store: SQLiteStore | None = None) -> Path:
             """,
             conn,
         )
+        source_df = pd.read_sql_query(
+            """
+            SELECT source_api, COUNT(*) AS paper_count
+            FROM papers
+            GROUP BY source_api
+            ORDER BY paper_count DESC
+            LIMIT 10
+            """,
+            conn,
+        )
+        extraction_summary_df = pd.read_sql_query(
+            """
+            SELECT
+                COUNT(*) AS total_extractions,
+                COUNT(DISTINCT paper_id) AS papers_extracted,
+                COUNT(CASE WHEN model_name LIKE 'rule_based%' THEN 1 END) AS rule_based_extractions,
+                COUNT(CASE WHEN model_name NOT LIKE 'rule_based%' THEN 1 END) AS llm_extractions,
+                ROUND(AVG(confidence), 3) AS avg_confidence
+            FROM paper_extractions
+            """,
+            conn,
+        )
+        extraction_field_df = pd.read_sql_query(
+            """
+            SELECT field, COUNT(*) AS extraction_count
+            FROM paper_extractions
+            GROUP BY field
+            ORDER BY extraction_count DESC
+            """,
+            conn,
+        )
+        relevance_df = pd.read_sql_query(
+            """
+            SELECT relevance_label, COUNT(*) AS extraction_count
+            FROM paper_extractions
+            GROUP BY relevance_label
+            ORDER BY extraction_count DESC
+            """,
+            conn,
+        )
+        method_df = pd.read_sql_query(
+            """
+            SELECT
+                method,
+                COUNT(*) AS extraction_count
+            FROM paper_extractions
+            GROUP BY method
+            ORDER BY extraction_count DESC
+            LIMIT 10
+            """,
+            conn,
+        )
     summary = summary_df.iloc[0].to_dict() if not summary_df.empty else {}
     content = f"""# Academic Paper Pipeline Report
 
@@ -106,6 +158,21 @@ Generated at: `{utc_now()}`
 
 # Top topics
 {_table_to_markdown(topic_df)}
+
+# Source distribution
+{_table_to_markdown(source_df)}
+
+# Extraction summary
+{_table_to_markdown(extraction_summary_df)}
+
+# Extraction fields
+{_table_to_markdown(extraction_field_df)}
+
+# Relevance labels
+{_table_to_markdown(relevance_df)}
+
+# Extraction methods
+{_table_to_markdown(method_df)}
 
 # Error summary
 {_table_to_markdown(error_df)}

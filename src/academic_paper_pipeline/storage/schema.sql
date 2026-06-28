@@ -88,3 +88,19 @@ CREATE TABLE IF NOT EXISTS errors (
     created_at TEXT NOT NULL,
     FOREIGN KEY (run_id) REFERENCES pipeline_runs(run_id) ON DELETE SET NULL
 );
+
+CREATE TABLE IF NOT EXISTS paper_extractions (
+    extraction_id TEXT PRIMARY KEY,
+    paper_id TEXT NOT NULL,
+    research_question TEXT,
+    method TEXT,
+    dataset TEXT,
+    key_finding TEXT,
+    field TEXT,
+    relevance_label TEXT,
+    confidence REAL,
+    model_name TEXT NOT NULL,
+    raw_output_json TEXT,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (paper_id) REFERENCES papers(paper_id) ON DELETE CASCADE
+);
