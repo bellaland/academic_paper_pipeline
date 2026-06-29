@@ -40,3 +40,8 @@ htmlcov/
 .langsmith/
 
 *.log
+
+# Prometheus local runtime data
+data/lock
+data/queries.active
+data/wal/
